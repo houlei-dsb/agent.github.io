@@ -1,0 +1,23 @@
+{
+  "graphs": {
+    "驾校助手": "./src/agent.ts"
+  },
+  "env": {
+    "OPENAI_API_KEY": {
+      "description": "AI API密钥",
+      "required": true
+    },
+    "MODEL_NAME": {
+      "description": "模型名称",
+      "required": false,
+      "default": "qwen3.6-plus"
+    },
+    "LANGSMITH_API_KEY": {
+      "description": "LangSmith API密钥",
+      "required": true
+    }
+  },
+  "server": {
+    "port": 3001
+  }
+}
