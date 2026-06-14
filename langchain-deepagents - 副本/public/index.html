@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>小侯驾校助手 - AI智能服务</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            height: 100%;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        
+        .header h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        .header p {
+            font-size: 0.8rem;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+        
+        /* Tab栏 */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #e0e0e0;
+            background: #fafafa;
+            flex-shrink: 0;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 18px 8px;
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .tab.active {
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 20%;
+            right: 20%;
+            height: 2px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 1px;
+        }
+        
+        /* 聊天消息区域 */
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 消息气泡 */
+        .message {
+            max-width: 80%;
+            margin-bottom: 16px;
+            padding: 10px 14px;
+            border-radius: 18px;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+        
+        /* AI消息 - 左边 */
+        .message.ai {
+            align-self: flex-start;
+            background: #f0f0f0;
+            color: #333;
+            border-bottom-left-radius: 4px;
+        }
+        
+        /* 用户消息 - 右边 */
+        .message.user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        
+        /* 消息头部 */
+        .message-header {
+            font-size: 12px;
+            margin-bottom: 4px;
+            opacity: 0.7;
+        }
+        
+        .message.ai .message-header {
+            color: #666;
+        }
+        
+        .message.user .message-header {
+            color: rgba(255,255,255,0.8);
+        }
+        
+        /* 输入区域 */
+        .input-area {
+            padding: 12px;
+            border-top: 1px solid #e0e0e0;
+            background: #fafafa;
+            flex-shrink: 0;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+        
+        .input-group textarea {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 24px;
+            resize: none;
+            min-height: 48px;
+            max-height: 120px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+        
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 24px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* 加载状态 */
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 移动端适配 */
+        @media (max-width: 480px) {
+            .container {
+                height: 100vh;
+                max-width: 100%;
+            }
+            
+            .header h1 {
+                font-size: 1.1rem;
+            }
+            
+            .tab {
+                font-size: 14px;
+                padding: 15px 4px;
+            }
+            
+            .message {
+                max-width: 85%;
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+            
+            .input-group textarea {
+                padding: 10px 14px;
+                font-size: 15px;
+            }
+            
+            .btn {
+                padding: 10px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚗 小侯驾校助手</h1>
+            <p>AI智能驾校服务平台</p>
+        </div>
+        
+        <!-- Tab栏 -->
+        <div class="tabs">
+            <div class="tab active" id="tab-math" onclick="switchTab('math')">🏢 驾校选择</div>
+            <div class="tab" id="tab-research" onclick="switchTab('research')">👨‍🏫 教练选择</div>
+            <div class="tab" id="tab-code" onclick="switchTab('code')">📝 考试答疑</div>
+        </div>
+        
+        <div class="chat-area" id="chat-area">
+            <!-- 初始消息 -->
+            <div class="message ai">
+                <div class="message-header">AI助手</div>
+                <div>您好！我是小侯驾校助手，您可以先输入您的城市（+地区）开始我们的帮助。</div>
+            </div>
+        </div>
+        
+        <div class="input-area">
+            <div class="input-group">
+                <textarea id="user-input" placeholder="输入您的问题，例如：北京口碑好的驾校推荐"></textarea>
+                <button class="btn" onclick="sendMessage()">
+                    <span id="btn-text">发送</span>
+                    <span class="loading" id="loading" style="display:none"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== API配置 ==========
+        // 设置为 'local' 使用本地服务器，设置为 'remote' 使用远程服务器
+        const API_MODE = 'remote';
+        
+        // 远程服务器地址
+        const REMOTE_API_URL = 'https://8.209.232.25';
+        // 本地服务器地址
+        const LOCAL_API_URL = 'http://localhost:3000';
+        
+        // 根据配置选择API地址
+        const API_BASE_URL = API_MODE === 'remote' ? REMOTE_API_URL : LOCAL_API_URL;
+        // ========== 配置结束 ==========
+        
+        let currentTab = 'math'; // 当前选中的tab
+        let conversationHistory = {}; // 保存每个tab的对话历史
+        
+        const tabNames = {
+            math: '驾校选择',
+            research: '教练选择',
+            code: '考试答疑'
+        };
+
+        // 初始化对话历史
+        Object.keys(tabNames).forEach(tab => {
+            conversationHistory[tab] = [];
+        });
+
+        // 切换tab
+        function switchTab(tabName) {
+            currentTab = tabName;
+            
+            // 更新tab样式
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById('tab-' + tabName).classList.add('active');
+            
+            // 清空聊天区域，显示新的欢迎消息
+            const chatArea = document.getElementById('chat-area');
+            chatArea.innerHTML = `
+                <div class="message ai">
+                    <div class="message-header">AI助手</div>
+                    <div>您好！我是${tabNames[tabName]}助手，您可以先输入您的城市（+地区）开始我们的帮助。</div>
+                </div>
+            `;
+            
+            // 清空当前tab的对话历史
+            conversationHistory[tabName] = [];
+        }
+
+        // 添加消息到聊天区域
+        function addMessage(text, isUser) {
+            const chatArea = document.getElementById('chat-area');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = isUser ? 'message user' : 'message ai';
+            
+            const header = document.createElement('div');
+            header.className = 'message-header';
+            header.textContent = isUser ? '我' : 'AI助手';
+            
+            const content = document.createElement('div');
+            content.textContent = text;
+            
+            messageDiv.appendChild(header);
+            messageDiv.appendChild(content);
+            chatArea.appendChild(messageDiv);
+            
+            // 滚动到底部
+            chatArea.scrollTop = chatArea.scrollHeight;
+            
+            // 保存到对话历史
+            conversationHistory[currentTab].push({
+                role: isUser ? 'user' : 'assistant',
+                content: text
+            });
+        }
+
+        // 发送消息
+        async function sendMessage() {
+            const input = document.getElementById('user-input');
+            const text = input.value.trim();
+            
+            if (!text) return;
+            
+            // 显示用户消息
+            addMessage(text, true);
+            input.value = '';
+            
+            // 显示加载状态
+            const btnText = document.getElementById('btn-text');
+            const loading = document.getElementById('loading');
+            btnText.style.display = 'none';
+            loading.style.display = 'inline-block';
+            
+            try {
+                // 构建完整的对话历史
+                const history = conversationHistory[currentTab]
+                    .filter(msg => msg.role === 'user')  // 只取用户消息
+                    .map(msg => msg.content)
+                    .join('\n');
+                
+                // 根据当前tab调用不同的API接口，发送完整对话历史
+                const response = await fetch(API_BASE_URL + '/api/' + currentTab, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        query: text,
+                        history: history  // 发送之前的对话历史
+                    })
+                });
+                
+                const data = await response.json();
+                addMessage(data.result, false);
+            } catch (error) {
+                addMessage('抱歉，当前服务暂时不可用，请稍后重试。', false);
+            } finally {
+                // 隐藏加载状态
+                btnText.style.display = 'inline';
+                loading.style.display = 'none';
+            }
+        }
+
+        // 回车键发送
+        document.getElementById('user-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "驾校助手",
+  "version": "1.0.0",
+  "description": "基于LangGraph的驾校推荐助手",
+  "main": "dist/agent.js",
+  "scripts": {
+    "build": "tsc",
+    "deploy": "deepagents deploy"
+  },
+  "env": {
+    "OPENAI_API_KEY": {
+      "description": "AI API密钥",
+      "required": true
+    },
+    "MODEL_NAME": {
+      "description": "模型名称",
+      "required": false,
+      "default": "qwen3.6-plus"
+    }
+  }
+}
