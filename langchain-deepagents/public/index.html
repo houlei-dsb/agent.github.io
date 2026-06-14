@@ -279,7 +279,7 @@
     <script>
         // ========== API配置 ==========
         // 设置为 'local' 使用本地服务器，设置为 'remote' 使用远程服务器
-        const API_MODE = 'remote';
+        const API_MODE = 'local';
         
         // 远程服务器地址
         const REMOTE_API_URL = 'https://8.209.232.25';
@@ -316,10 +316,21 @@
             
             // 清空聊天区域，显示新的欢迎消息
             const chatArea = document.getElementById('chat-area');
+            
+            // 根据不同tab显示不同的提示语
+            let welcomeMsg;
+            if (tabName === 'code') {
+                // 考试答疑tab显示新提示语
+                welcomeMsg = '你好呀！我是你的专属小侯驾考助手🚗 从报考选驾校，到科目一到科目四的全流程，都可以帮你答疑解惑~ 为了给你匹配当地最新的驾考政策和流程，请先告诉我您所需要查询的科目！';
+            } else {
+                // 其他tab显示原提示语
+                welcomeMsg = `您好！我是${tabNames[tabName]}助手，您可以先输入您的城市（+地区）开始我们的帮助。`;
+            }
+            
             chatArea.innerHTML = `
                 <div class="message ai">
                     <div class="message-header">AI助手</div>
-                    <div>您好！我是${tabNames[tabName]}助手，您可以先输入您的城市（+地区）开始我们的帮助。</div>
+                    <div>${welcomeMsg}</div>
                 </div>
             `;
             
